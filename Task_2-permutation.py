@@ -1,41 +1,46 @@
-def vigenere_encrypt(plaintext, key):
-    plaintext = plaintext.upper()
-    key = key.upper()
-    encrypted_text = ""
-    key_index = 0
+def generate_permutation_key(phrase):
+    """
+    Функція для генерування порядку перестановки на основі ключової фрази.
+    """
+    sorted_phrase = sorted(list(phrase))
+    return [sorted_phrase.index(char) for char in phrase]
 
-    for char in plaintext:
-        if char.isalpha():  # Шифруються лише літери
-            shift = ord(key[key_index]) - ord('A')
-            encrypted_char = chr((ord(char) - ord('A') + shift) % 26 + ord('A'))
-            encrypted_text += encrypted_char
-            key_index = (key_index + 1) % len(key)
-        else:
-            encrypted_text += char  # Залишаємо символи без змін
+def encrypt(text, key):
+    """
+    Функція шифрування тексту з використанням алгоритму перестановки.
+    """
+    # Розбивання тексту на рядки відповідно до довжини ключа
+    rows = [text[i:i + len(key)] for i in range(0, len(text), len(key))]
+    # Заповнення останнього рядка пробілами (за необхідності)
+    rows[-1] = rows[-1].ljust(len(key))
+    
+    # Шифрування, перемішуючи стовпчики за ключем
+    encrypted = ''
+    for index in sorted(range(len(key)), key=lambda x: key[x]):
+        encrypted += ''.join(row[index] for row in rows)
+    return encrypted
 
-    return encrypted_text
+def decrypt(text, key):
+    """
+    Функція дешифрування тексту з використанням алгоритму перестановки.
+    """
+    num_rows = len(text) // len(key)
+    # Розбивання тексту на стовпці
+    columns = [text[i * num_rows:(i + 1) * num_rows] for i in range(len(key))]
+    # Повернення порядку колонок до оригінального
+    reordered_columns = [''] * len(key)
+    for i, col_index in enumerate(sorted(range(len(key)), key=lambda x: key[x])):
+        reordered_columns[col_index] = columns[i]
+    
+    # Дешифрування та з'єднання стовпчиків
+    decrypted = ''.join(''.join(row) for row in zip(*reordered_columns)).rstrip()
+    return decrypted
 
+# Ключова фраза
+key_phrase = "SECRET"
+key = generate_permutation_key(key_phrase)
 
-def vigenere_decrypt(ciphertext, key):
-    ciphertext = ciphertext.upper()
-    key = key.upper()
-    decrypted_text = ""
-    key_index = 0
-
-    for char in ciphertext:
-        if char.isalpha():  # Дешифруються лише літери
-            shift = ord(key[key_index]) - ord('A')
-            decrypted_char = chr((ord(char) - ord('A') - shift + 26) % 26 + ord('A'))
-            decrypted_text += decrypted_char
-            key_index = (key_index + 1) % len(key)
-        else:
-            decrypted_text += char  # Залишаємо символи без змін
-
-    return decrypted_text
-
-
-# Приклад використання
-key = "CRYPTOGRAPHY"
+# Текст для шифрування
 plaintext = """
 The artist is the creator of beautiful things. To reveal art and conceal the artist is 
 art's aim. The critic is he who can translate into another manner or a new material his 
@@ -67,14 +72,17 @@ character_count=len(plaintext)
 print(">>> кількість символів у тексті для шифрування становить -", character_count, " символів")
 print("")
 
-ciphertext = vigenere_encrypt(plaintext, key)
-print("Зашифрований текст:", ciphertext[:200]) # для зручності обмежуємо кількість виведення шифрованого тексту
+# Шифрування
+encrypted_text = encrypt(plaintext, key)
+print("Зашифрований текст:", encrypted_text[:200]) # для зручності обмежуємо кількість виведення шифрованого тексту
 
-character_count2=len(ciphertext)
+character_count2=len(encrypted_text)
 print(">>> кількість символів у зашифрованому тексті становить -", character_count2, " символів")
 print("")
 
-decrypted_text = vigenere_decrypt(ciphertext, key)
+# Дешифрування
+decrypted_text = decrypt(encrypted_text, key)
 print("Розшифрований текст:", decrypted_text[:200]) # для зручності обмежуємо кількість виведення розшифрованого тексту
+
 character_count3=len(decrypted_text)
 print(">>> кількість символів у розшифрованому тексті становить -", character_count3, " символів")

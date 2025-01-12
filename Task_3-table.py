@@ -1,41 +1,56 @@
-def vigenere_encrypt(plaintext, key):
-    plaintext = plaintext.upper()
-    key = key.upper()
-    encrypted_text = ""
-    key_index = 0
+import math
 
-    for char in plaintext:
-        if char.isalpha():  # Шифруються лише літери
-            shift = ord(key[key_index]) - ord('A')
-            encrypted_char = chr((ord(char) - ord('A') + shift) % 26 + ord('A'))
-            encrypted_text += encrypted_char
-            key_index = (key_index + 1) % len(key)
-        else:
-            encrypted_text += char  # Залишаємо символи без змін
+def create_table(key, text, fill_char='X'):
+    """
+    Функція яка створює таблицю на основі ключа та тексту.
+    """
+    # Визначення кількості колонок за довжиною ключа
+    columns = len(key)
+    # Додаємо заповнювач, якщо текст недостатньої довжини
+    rows = math.ceil(len(text) / columns)
+    padded_text = text.ljust(rows * columns, fill_char)
+    table = [padded_text[i:i + columns] for i in range(0, len(padded_text), columns)]
+    return table
 
+def sort_key(key):
+    """
+    Функція яка сортує ключ і повертає індекси для перестановки.
+    """
+    return sorted(range(len(key)), key=lambda k: key[k])
+
+def encrypt(text, key_phrase):
+    """
+    Функція шифрування тексту за допомогою табличного шифру.
+    """
+    # Генеруємо таблицю
+    key = sort_key(key_phrase)
+    table = create_table(key_phrase, text)
+    # Читаємо стовпці у відсортованому порядку
+    encrypted_text = ''.join(''.join(row[k] for row in table) for k in key)
     return encrypted_text
 
-
-def vigenere_decrypt(ciphertext, key):
-    ciphertext = ciphertext.upper()
-    key = key.upper()
-    decrypted_text = ""
-    key_index = 0
-
-    for char in ciphertext:
-        if char.isalpha():  # Дешифруються лише літери
-            shift = ord(key[key_index]) - ord('A')
-            decrypted_char = chr((ord(char) - ord('A') - shift + 26) % 26 + ord('A'))
-            decrypted_text += decrypted_char
-            key_index = (key_index + 1) % len(key)
-        else:
-            decrypted_text += char  # Залишаємо символи без змін
-
+def decrypt(encrypted_text, key_phrase):
+    """
+    Функція дешифрування тексту за допомогою табличного шифру.
+    """
+    # Генеруємо таблицю
+    key = sort_key(key_phrase)
+    columns = len(key_phrase)
+    rows = len(encrypted_text) // columns
+    # Розбиваємо текст на стовпці
+    cols = [encrypted_text[i * rows:(i + 1) * rows] for i in range(columns)]
+    # Відновлюємо порядок стовпців
+    reordered_cols = [''] * columns
+    for i, k in enumerate(key):
+        reordered_cols[k] = cols[i]
+    # Збираємо текст з таблиці
+    decrypted_text = ''.join(''.join(row) for row in zip(*reordered_cols)).rstrip('X')
     return decrypted_text
 
+# Ключова фраза
+key_phrase = "MATRIX"
 
-# Приклад використання
-key = "CRYPTOGRAPHY"
+# Текст для шифрування
 plaintext = """
 The artist is the creator of beautiful things. To reveal art and conceal the artist is 
 art's aim. The critic is he who can translate into another manner or a new material his 
@@ -67,14 +82,17 @@ character_count=len(plaintext)
 print(">>> кількість символів у тексті для шифрування становить -", character_count, " символів")
 print("")
 
-ciphertext = vigenere_encrypt(plaintext, key)
-print("Зашифрований текст:", ciphertext[:200]) # для зручності обмежуємо кількість виведення шифрованого тексту
+# Шифрування
+encrypted_text = encrypt(plaintext, key_phrase)
+print("Зашифрований текст:", encrypted_text[:200]) # для зручності обмежуємо кількість виведення шифрованого тексту
 
-character_count2=len(ciphertext)
+character_count2=len(encrypted_text)
 print(">>> кількість символів у зашифрованому тексті становить -", character_count2, " символів")
 print("")
 
-decrypted_text = vigenere_decrypt(ciphertext, key)
+# Дешифрування
+decrypted_text = decrypt(encrypted_text, key_phrase)
 print("Розшифрований текст:", decrypted_text[:200]) # для зручності обмежуємо кількість виведення розшифрованого тексту
+
 character_count3=len(decrypted_text)
 print(">>> кількість символів у розшифрованому тексті становить -", character_count3, " символів")
